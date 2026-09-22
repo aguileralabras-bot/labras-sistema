@@ -1,0 +1,12 @@
+{
+  "name": "labras-sistema",
+  "version": "1.0.0",
+  "description": "Sistema de Gestion Analitica LABRAS S.R.L.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

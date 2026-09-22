@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABRAS S.R.L. - Sistema de Gestión Analítica</title>
+    <style>
+        :root {
+            --primary: #82cb46;
+            --primary-dark: #6fb236;
+            --primary-light: #f3faed;
+            --accent: #0284c7;
+            --bg-main: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #94a3b8;
+            --sidebar-hover-bg: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
+        
+        aside { width: 280px; background: var(--sidebar-bg); border-right: 1px solid #0f172a; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.05); }
+        .logo-area { padding: 25px 20px; border-bottom: 1px solid #334155; display: flex; flex-direction: column; gap: 4px; background: #0f172a; }
+        .logo-title { font-size: 1.2rem; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; }
+        .logo-subtitle { font-size: 0.72rem; color: #82cb46; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .menu { list-style: none; padding: 20px 12px; display: flex; flex-direction: column; gap: 6px; }
+        .menu li { border-radius: 8px; overflow: hidden; transition: all 0.2s ease; }
+        .menu li a { display: flex; align-items: center; gap: 14px; padding: 12px 16px; text-decoration: none; color: var(--sidebar-text); font-weight: 500; font-size: 0.95rem; cursor: pointer; }
+        .menu li.active, .menu li:hover { background: var(--sidebar-hover-bg); }
+        .menu li.active a, .menu li:hover a { color: #ffffff; font-weight: 600; }
+        .menu li.active { box-shadow: inset 3px 0 0 var(--primary); }
+
+        main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        header { background: #ffffff; padding: 16px 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .header-title { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+        .user-badge { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem; background: #f1f5f9; padding: 6px 14px; border-radius: 20px; color: #3f6212; border: 1px solid var(--border); }
+        
+        .content { padding: 30px; max-width: 1500px; width: 100%; margin: 0 auto; }
+        
+        .card { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 25px; display: none; }
+        .card.active-module { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1 { font-size: 1.5rem; margin-bottom: 25px; color: #0f172a; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+        
+        .tabs { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .tab-btn { background: #f8fafc; border: 1px solid var(--border); padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-muted); border-radius: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: var(--primary-light); color: #3f6212; border-color: var(--primary); font-weight: 700; }
+
+        .form-section { background: #ffffff; border: 1px solid var(--border); padding: 24px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .form-section h3 { font-size: 1.05rem; color: #0f172a; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem; background: #f8fafc; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(130, 203, 70, 0.2); }
+        
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+        .checkbox-item input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn-action { background: var(--primary); color: #1e293b; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(130, 203, 70, 0.25); }
+        .btn-action:hover { background: var(--primary-dark); color: #ffffff; }
+        .btn-secondary { background: #e2e8f0; color: #334155; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.82rem; transition: 0.2s; }
+        .btn-danger:hover { background: #dc2626; color: white; }
+        .btn-new { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-new:hover { background: #0369a1; }
+
+        .recepcion-card-item { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .recepcion-badge { background: var(--primary-light); color: #3f6212; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; }
+
+        .table-container { overflow-x: auto; max-height: 450px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; background: white; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+        th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        th { background: #f1f5f9; color: #334155; position: sticky; top: 0; z-index: 1; font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+        table input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; }
+    </style>
+    <!-- Libreria jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <aside>
+        <div class="logo-area">
+            <span class="logo-title">LABRAS S.R.L.</span>
+            <span class="logo-subtitle">Laboratorio Bromatológico</span>
+        </div>
+        <ul class="menu">
+            <li id="menu-dashboard"><a onclick="cambiarModulo('dashboard')">🏠 Dashboard</a></li>
+            <li id="menu-recepcion" class="active"><a onclick="cambiarModulo('recepcion')">📦 Recepción de Muestras</a></li>
+            <li id="menu-clientes"><a onclick="cambiarModulo('clientes')">👥 Base de Clientes</a></li>
+            <li id="menu-planillas"><a onclick="cambiarModulo('planillas')">📑 Plantilla Analítica</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <header>
+            <span class="header-title">LABRAS S.R.L. — Sistema de Gestión Analítica</span>
+            <div class="user-badge">
+                <span>👤</span> Dr. Jose Luis / Lic. María Paula
+            </div>
+        </header>
+
+        <div class="content">
+
+            <!-- MÓDULO: RECEPCIÓN DE MUESTRAS -->
+            <div id="modulo-recepcion" class="card active-module">
+                <h1>Módulo de Recepción de Muestras</h1>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" id="btn-recepcion-fq" onclick="cambiarSubModuloRecepcion('FQ')">Recepción FQ (Fisicoquímica)</button>
+                    <button class="tab-btn" id="btn-recepcion-mb" onclick="cambiarSubModuloRecepcion('MB')">Recepción MB (Microbiológica)</button>
+                </div>
+
+                <div class="form-section">
+                    <h3>
+                        <span>👥 Datos del Cliente</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="buscar-cliente-rec" placeholder="🔍 Buscar cliente..." oninput="filtrarClientesRec(this.value)" style="padding: 6px 12px; width: 240px; border: 1px solid var(--border); border-radius: 6px;">
+                            <button class="btn-secondary" onclick="abrirModalNuevoCliente()">➕ Registrar Nuevo</button>
+                        </div>
+                    </h3>
+                    <div id="sugerencias-clientes-rec" style="display: none; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 15px; max-height: 150px; overflow-y: auto;"></div>
+
+                    <div class="form-grid">
+                        <div class="form-group"><label>Nombre o Razón Social</label><input type="text" id="rec-razon"></div>
+                        <div class="form-group"><label>Persona de Contacto</label><input type="text" id="rec-contacto"></div>
+                        <div class="form-group"><label>Dirección</label><input type="text" id="rec-direccion"></div>
+                        <div class="form-group"><label>Número de Teléfono</label><input type="text" id="rec-telefono"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📋 Especificaciones de Recepción y Muestreo</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>CM (Código de Recepción):</label><input type="text" id="rec-cm" placeholder="Ej. CM-2026-001" style="font-weight: bold; color: var(--primary-dark);"></div>
+                        <div class="form-group"><label>Producto:</label><input type="text" id="rec-producto" placeholder="Ej. Queso Fresco"></div>
+                        <div class="form-group"><label>Cantidad de Muestra:</label><input type="text" id="rec-cantidad" placeholder="Ej. 500 g"></div>
+                        <div class="form-group"><label>Tipo de Envase:</label>
+                            <select id="rec-envase">
+                                <option value="">-- Seleccionar Envase --</option>
+                                <option value="Bolsa Ziploc">Bolsa Ziploc</option><option value="Botella plástica">Botella plástica</option><option value="Bolsa Plástica">Bolsa Plástica</option><option value="Bolsa Hermética">Bolsa Hermética</option><option value="Bolsa Metalizada">Bolsa Metalizada</option><option value="Trilaminado metalizado">Trilaminado metalizado</option><option value="Tetra Pak">Tetra Pak</option><option value="Bidón Plástico">Bidón Plástico</option><option value="Galón Plástico">Galón Plástico</option><option value="Hojalata">Hojalata</option><option value="Bolsa Polipropileno">Bolsa Polipropileno</option><option value="Bolsa Polietileno">Bolsa Polietileno</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Lote Nro:</label><input type="text" id="rec-lote" placeholder="Ej. L-01"></div>
+                        <div class="form-group"><label>Fecha de Elaboración:</label><input type="date" id="rec-elab"></div>
+                        <div class="form-group"><label>Fecha de Vencimiento:</label><input type="date" id="rec-venc"></div>
+                        <div class="form-group"><label>Fecha y Hora de Recepción:</label><input type="datetime-local" id="rec-fechahora"></div>
+                        <div class="form-group"><label>Fecha/Hora Toma de Muestra:</label><input type="datetime-local" id="rec-toma"></div>
+                        <div class="form-group"><label>Fecha Entrega de Resultados:</label><input type="date" id="rec-entrega"></div>
+                        <div class="form-group"><label>Temperatura de Muestra (°C):</label><input type="text" id="rec-temperatura" placeholder="Ej. 4.2 °C"></div>
+                        <div class="form-group"><label>Razón del Muestreo:</label>
+                            <select id="rec-razon-muestreo">
+                                <option value="Control Interno">Control Interno</option>
+                                <option value="Control de Desayuno Escolar">Control de Desayuno Escolar</option>
+                                <option value="Exportación">Exportación</option>
+                                <option value="Registro sanitario">Registro sanitario</option>
+                                <option value="Renovación">Renovación</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Tipo de Muestreo:</label><input type="text" value="AL AZAR" readonly style="background: #e2e8f0; font-weight: bold;"></div>
+                        <div class="form-group"><label>Responsable / Inspector:</label><input type="text" id="rec-inspector"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🔬 Ensayos Requeridos (Seleccionar con Check)</h3>
+                    <div class="checkbox-grid" id="contenedor-checkbox-ensayos"></div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📝 Observaciones y Canal de Envío</h3>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;"><label>Observaciones de Muestra:</label><textarea id="rec-observaciones" rows="2"></textarea></div>
+                        <div class="form-group"><label>Medio de Envío del Informe:</label>
+                            <select id="rec-medio-envio">
+                                <option value="WhatsApp">WhatsApp</option><option value="Correo Electrónico">Correo Electrónico</option><option value="Forma Física">Forma Física</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Responsable de Recepción Oficial:</label>
+                            <select id="rec-responsable">
+                                <option value="José Luis Aguilera Durán">José Luis Aguilera Durán</option><option value="María Paula García Peredo">María Paula García Peredo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 30px;">
+                    <button class="btn-new" onclick="reiniciarModuloRecepcionPura()">✨ Nueva Recepción</button>
+                    <button class="btn-action" onclick="guardarRecepcionPura()">💾 Guardar Recepción</button>
+                    <button class="btn-action" onclick="descargarFormularioRecepcionPDF()" style="background: #1e3a8a; color: white;">📥 Descargar Formulario (PDF)</button>
+                </div>
+            </div>
+
+            <!-- MÓDULO: BASE DE CLIENTES -->
+            <div id="modulo-clientes" class="card">
+                <h1>Gestión de Base de Clientes</h1>
+                <div class="form-section">
+                    <h3>Agregar o Editar Cliente</h3>
+                    <div class="form-grid">
+                        <input type="hidden" id="cli-edit-index" value="">
+                        <div class="form-group"><label>Razón Social</label><input type="text" id="cli-razon"></div>
+                        <div class="form-group"><label>Contacto</label><input type="text" id="cli-contacto"></div>
+                        <div class="form-group"><label>Dirección</label><input type="text" id="cli-direccion"></div>
+                        <div class="form-group"><label>Teléfono</label><input type="text" id="cli-telefono"></div>
+                    </div>
+                    <button class="btn-action" onclick="guardarClienteModulo()">💾 Guardar / Actualizar Cliente</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Razón Social</th><th>Contacto</th><th>Dirección</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-clientes-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MÓDULO: PLANILLA ANALÍTICA -->
+            <div id="modulo-planillas" class="card">
+                <h1>Módulo de Plantilla Analítica</h1>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" id="btn-plantilla-fq" onclick="cambiarSubModuloPlantilla('FQ')">Plantilla FQ (Fisicoquímica)</button>
+                    <button class="tab-btn" id="btn-plantilla-mb" onclick="cambiarSubModuloPlantilla('MB')">Plantilla MB (Microbiológica)</button>
+                </div>
+
+                <div class="form-section">
+                    <h3>
+                        <span>🔍 Seleccionar Recepción Registrada</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="select-recepcion-planilla" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 340px;" onchange="cargarDatosPlantillaPorCM(this.value)">
+                                <option value="">-- Escoger CM, Producto, Fechas y Lote --</option>
+                            </select>
+                            <button class="btn-action" onclick="agregarFilaEnsayoPlantilla()">➕ Agregar Ensayo / Repetición</button>
+                        </div>
+                    </h3>
+
+                    <div class="form-grid">
+                        <div class="form-group"><label>Código CM:</label><input type="text" id="plant_cm" readonly style="font-weight: bold; background: #e2e8f0;"></div>
+                        <div class="form-group"><label>Nombre del Producto:</label><input type="text" id="plant_producto" readonly style="font-weight: bold; background: #e2e8f0;"></div>
+                        <div class="form-group"><label>Lote:</label><input type="text" id="plant_lote" readonly style="background: #e2e8f0;"></div>
+                        <div class="form-group"><label>Fechas (Elab / Venc):</label><input type="text" id="plant_fechas" readonly style="background: #e2e8f0;"></div>
+                        <div class="form-group"><label>Responsable del Análisis:</label><input type="text" id="plant_responsable" placeholder="Ej. Dr. Jose Luis / Lic. María Paula" oninput="guardarDatosPlantillaActual()"></div>
+                        <div class="form-group"><label>Fecha de Análisis:</label><input type="date" id="plant_fecha_analisis" oninput="guardarDatosPlantillaActual()"></div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nro.</th>
+                                <th>Ensayo / Parámetro Tiqueado</th>
+                                <th>Método / Especificación</th>
+                                <th>Resultado Obtenido</th>
+                                <th>Observación / Repetición</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-plantilla-body">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px;">Escoja una recepción arriba para cargar los datos principales y ensayos.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                    <button class="btn-action" onclick="guardarDatosPlantillaActual()">💾 Guardar Plantilla Analítica</button>
+                    <button class="btn-action" onclick="descargarPlantillaPDFOficial()" style="background: #1e3a8a; color: white;">📥 Descargar Plantilla Oficial (PDF)</button>
+                </div>
+            </div>
+
+            <!-- MÓDULO: DASHBOARD -->
+            <div id="modulo-dashboard" class="card">
+                <h1>Dashboard Principal</h1>
+                <p style="color: var(--text-muted);">Panel de control general de operaciones LABRAS S.R.L.</p>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let clientesRegistrados = JSON.parse(localStorage.getItem('labras_clientes')) || [
+            { razon: "Flor de Leche S.R.L.", contacto: "Mary Huanca Salazar", direccion: "Zona Sojsaña, Achocalla - La Paz", telefono: "72066012" },
+            { razon: "Frigor S.R.L.", contacto: "Dra. Carola Robles", direccion: "Parque Industrial, Santa Cruz", telefono: "3-3456789" }
+        ];
+
+        let ensayosFQ = [
+            "Humedad", "Cenizas Totales", "Proteína Total", "Grasa", "Fibra alimentaria", 
+            "Carbohidratos", "Valor calorico", "Propiedades Organolépticas", 
+            "Fósforo*", "Calcio*", "Hierro*", "Zinc *", "Sodio *"
+        ];
+
+        let ensayosMB = [
+            "Bacterias mesófilas aerobias", "Coliformes totales/ E. coli", 
+            "Staphylococcus aureus", "Mohos y Levaduras", "Salmonella spp"
+        ];
+
+        let historialRecepcionesPuras = JSON.parse(localStorage.getItem('labras_recep_puras')) || [];
+        let plantillasGuardadas = JSON.parse(localStorage.getItem('labras_plantillas_guardadas')) || {};
+        
+        let subModuloRecepcionActual = 'FQ';
+        let subModuloPlantillaActual = 'FQ';
+        let cmSeleccionadoActual = "";
+
+        function guardarDatosStorage() {
+            localStorage.setItem('labras_clientes', JSON.stringify(clientesRegistrados));
+            localStorage.setItem('labras_recep_puras', JSON.stringify(historialRecepcionesPuras));
+            localStorage.setItem('labras_plantillas_guardadas', JSON.stringify(plantillasGuardadas));
+        }
+
+        function cambiarModulo(modulo) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-module'));
+            document.querySelectorAll('.menu li').forEach(l => l.classList.remove('active'));
+            
+            const cardObj = document.getElementById('modulo-' + modulo);
+            const menuObj = document.getElementById('menu-' + modulo);
+
+            if (cardObj) cardObj.classList.add('active-module');
+            if (menuObj) menuObj.classList.add('active');
+
+            if(modulo === 'clientes') actualizarTablaClientes();
+            if(modulo === 'planillas') actualizarSelectRecepcionPlantilla();
+        }
+
+        function cambiarSubModuloRecepcion(tipo) {
+            subModuloRecepcionActual = tipo;
+            document.getElementById('btn-recepcion-fq').classList.remove('active');
+            document.getElementById('btn-recepcion-mb').classList.remove('active');
+            document.getElementById(tipo === 'FQ' ? 'btn-recepcion-fq' : 'btn-recepcion-mb').classList.add('active');
+            renderizarEnsayosChecklist();
+        }
+
+        function renderizarEnsayosChecklist() {
+            const contenedor = document.getElementById('contenedor-checkbox-ensayos');
+            contenedor.innerHTML = '';
+            let lista = subModuloRecepcionActual === 'FQ' ? ensayosFQ : ensayosMB;
+            lista.forEach((ensayo, idx) => {
+                let div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `<input type="checkbox" value="${ensayo}" id="ensayo_${idx}" name="ensayo_check"> <label for="ensayo_${idx}">${ensayo}</label>`;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function filtrarClientesRec(texto) {
+            const contenedor = document.getElementById('sugerencias-clientes-rec');
+            if(!texto) { contenedor.style.display = 'none'; return; }
+            let filtrados = clientesRegistrados.filter(c => c.razon.toLowerCase().includes(texto.toLowerCase()));
+            if(filtrados.length === 0) { contenedor.style.display = 'none'; return; }
+            let html = "<b>Clientes:</b><ul style='list-style:none; padding:0; margin-top:5px;'>";
+            filtrados.forEach(c => {
+                html += `<li style='padding:4px 8px; cursor:pointer; border-bottom:1px solid #e2e8f0;' onclick="seleccionarClienteRec('${c.razon}', '${c.contacto}', '${c.direccion}', '${c.telefono}')">${c.razon} — <i>${c.contacto}</i></li>`;
+            });
+            html += "</ul>";
+            contenedor.innerHTML = html;
+            contenedor.style.display = 'block';
+        }
+
+        function seleccionarClienteRec(razon, contacto, direccion, telefono) {
+            document.getElementById('rec-razon').value = razon;
+            document.getElementById('rec-contacto').value = contacto;
+            document.getElementById('rec-direccion').value = direccion;
+            document.getElementById('rec-telefono').value = telefono;
+            document.getElementById('buscar-cliente-rec').value = '';
+            document.getElementById('sugerencias-clientes-rec').style.display = 'none';
+        }
+
+        function abrirModalNuevoCliente() {
+            document.getElementById('cli-edit-index').value = '';
+            document.getElementById('cli-razon').value = '';
+            document.getElementById('cli-contacto').value = '';
+            document.getElementById('cli-direccion').value = '';
+            document.getElementById('cli-telefono').value = '';
+            cambiarModulo('clientes');
+        }
+
+        function guardarClienteModulo() {
+            const idx = document.getElementById('cli-edit-index').value;
+            const razon = document.getElementById('cli-razon').value;
+            const contacto = document.getElementById('cli-contacto').value;
+            const direccion = document.getElementById('cli-direccion').value;
+            const telefono = document.getElementById('cli-telefono').value;
+            if(!razon) { alert("Ingrese Razón Social."); return; }
+
+            if(idx !== "") { clientesRegistrados[parseInt(idx)] = { razon, contacto, direccion, telefono }; alert("¡Cliente actualizado!"); }
+            else { clientesRegistrados.push({ razon, contacto, direccion, telefono }); alert("¡Cliente registrado!"); }
+            guardarDatosStorage();
+            actualizarTablaClientes();
+            cambiarModulo('recepcion');
+        }
+
+        function actualizarTablaClientes() {
+            const tbody = document.getElementById('tabla-clientes-body');
+            tbody.innerHTML = '';
+            clientesRegistrados.forEach((c, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.razon}</td><td>${c.contacto}</td><td>${c.direccion}</td><td>${c.telefono}</td>
+                    <td style="display: flex; gap: 6px;">
+                        <button class="btn-new" style="padding: 5px 10px; font-size: 0.8rem;" onclick="editarCliente(${idx})">✏️ Editar</button>
+                        <button class="btn-danger" onclick="eliminarCliente(${idx})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editarCliente(idx) {
+            const c = clientesRegistrados[idx];
+            document.getElementById('cli-edit-index').value = idx;
+            document.getElementById('cli-razon').value = c.razon;
+            document.getElementById('cli-contacto').value = c.contacto;
+            document.getElementById('cli-direccion').value = c.direccion;
+            document.getElementById('cli-telefono').value = c.telefono;
+            cambiarModulo('clientes');
+        }
+
+        function eliminarCliente(idx) {
+            if(confirm("¿Eliminar cliente?")) { clientesRegistrados.splice(idx, 1); guardarDatosStorage(); actualizarTablaClientes(); }
+        }
+
+        function guardarRecepcionPura() {
+            const cm = document.getElementById('rec-cm').value;
+            const razon = document.getElementById('rec-razon').value;
+            if(!cm || !razon) { alert("Ingrese al menos el Código CM y el Cliente."); return; }
+
+            let ensayosTiqueados = [];
+            document.querySelectorAll('input[name="ensayo_check"]:checked').forEach(chk => ensayosTiqueados.push(chk.value));
+
+            let recData = {
+                tipo: subModuloRecepcionActual,
+                cm, razon,
+                contacto: document.getElementById('rec-contacto').value,
+                direccion: document.getElementById('rec-direccion').value,
+                telefono: document.getElementById('rec-telefono').value,
+                producto: document.getElementById('rec-producto').value,
+                cantidad: document.getElementById('rec-cantidad').value,
+                envase: document.getElementById('rec-envase').value,
+                lote: document.getElementById('rec-lote').value,
+                elab: document.getElementById('rec-elab').value,
+                venc: document.getElementById('rec-venc').value,
+                fechahora: document.getElementById('rec-fechahora').value,
+                toma: document.getElementById('rec-toma').value,
+                entrega: document.getElementById('rec-entrega').value,
+                temperatura: document.getElementById('rec-temperatura').value,
+                razonMuestreo: document.getElementById('rec-razon-muestreo').value,
+                inspector: document.getElementById('rec-inspector').value,
+                ensayos: ensayosTiqueados,
+                observaciones: document.getElementById('rec-observaciones').value,
+                medioEnvio: document.getElementById('rec-medio-envio').value,
+                responsable: document.getElementById('rec-responsable').value
+            };
+
+            let idx = historialRecepcionesPuras.findIndex(r => r.cm === cm);
+            if(idx >= 0) { historialRecepcionesPuras[idx] = recData; alert("¡Recepción actualizada con éxito!"); }
+            else { historialRecepcionesPuras.push(recData); alert("¡Recepción guardada con éxito!"); }
+
+            guardarDatosStorage();
+        }
+
+        function reiniciarModuloRecepcionPura() {
+            if(confirm("¿Limpiar formulario?")) {
+                document.getElementById('rec-cm').value = '';
+                document.getElementById('rec-razon').value = '';
+                document.getElementById('rec-contacto').value = '';
+                document.getElementById('rec-direccion').value = '';
+                document.getElementById('rec-telefono').value = '';
+                document.getElementById('rec-producto').value = '';
+                document.getElementById('rec-cantidad').value = '';
+                document.getElementById('rec-envase').value = '';
+                document.getElementById('rec-lote').value = '';
+                document.getElementById('rec-elab').value = '';
+                document.getElementById('rec-venc').value = '';
+                document.getElementById('rec-fechahora').value = '';
+                document.getElementById('rec-toma').value = '';
+                document.getElementById('rec-entrega').value = '';
+                document.getElementById('rec-temperatura').value = '';
+                document.getElementById('rec-inspector').value = '';
+                document.getElementById('rec-observaciones').value = '';
+                document.querySelectorAll('input[name="ensayo_check"]').forEach(chk => chk.checked = false);
+            }
+        }
+
+        // LÓGICA DE PLANTILLA ANALÍTICA
+        function cambiarSubModuloPlantilla(tipo) {
+            subModuloPlantillaActual = tipo;
+            document.getElementById('btn-plantilla-fq').classList.remove('active');
+            document.getElementById('btn-plantilla-mb').classList.remove('active');
+            document.getElementById(tipo === 'FQ' ? 'btn-plantilla-fq' : 'btn-plantilla-mb').classList.add('active');
+            actualizarSelectRecepcionPlantilla();
+            document.getElementById('plant_cm').value = '';
+            document.getElementById('plant_producto').value = '';
+            document.getElementById('plant_lote').value = '';
+            document.getElementById('plant_fechas').value = '';
+            document.getElementById('tabla-plantilla-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px;">Escoja una recepción arriba para cargar los datos principales y ensayos.</td></tr>';
+        }
+
+        function actualizarSelectRecepcionPlantilla() {
+            const select = document.getElementById('select-recepcion-planilla');
+            select.innerHTML = '<option value="">-- Escoger CM, Producto, Fechas y Lote --</option>';
+            let filtradas = historialRecepcionesPuras.filter(r => r.tipo === subModuloPlantillaActual);
+            filtradas.forEach(rec => {
+                const opt = document.createElement('option');
+                opt.value = rec.cm;
+                opt.textContent = `CM: ${rec.cm} | ${rec.producto} | Lote: ${rec.lote} | Elab: ${rec.elab}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function cargarDatosPlantillaPorCM(cm) {
+            if(!cm) return;
+            cmSeleccionadoActual = cm;
+            const rec = historialRecepcionesPuras.find(r => r.cm === cm);
+            if(!rec) return;
+
+            document.getElementById('plant_cm').value = rec.cm;
+            document.getElementById('plant_producto').value = rec.producto;
+            document.getElementById('plant_lote').value = rec.lote;
+            document.getElementById('plant_fechas').value = `Elab: ${rec.elab} | Venc: ${rec.venc}`;
+
+            let claveStorage = `${cm}_${subModuloPlantillaActual}`;
+            let datosGuardados = plantillasGuardadas[claveStorage];
+
+            if (datosGuardados) {
+                document.getElementById('plant_responsable').value = datosGuardados.responsable || '';
+                document.getElementById('plant_fecha_analisis').value = datosGuardados.fecha || '';
+                renderizarTablaPlantilla(datosGuardados.ensayos);
+            } else {
+                let ensayosIniciales = rec.ensayos.map(e => ({ desc: e, metodo: 'Método Oficial', resultado: '', obs: '' }));
+                renderizarTablaPlantilla(ensayosIniciales);
+            }
+        }
+
+        function renderizarTablaPlantilla(ensayos) {
+            const tbody = document.getElementById('tabla-plantilla-body');
+            tbody.innerHTML = '';
+            ensayos.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td><input type="text" value="${item.desc}" class="p-desc"></td>
+                    <td><input type="text" value="${item.metodo || 'Método Oficial'}" class="p-metodo"></td>
+                    <td><input type="text" value="${item.resultado || ''}" class="p-resultado" placeholder="Digite resultado..." style="border-color: var(--primary); font-weight: bold;"></td>
+                    <td><input type="text" value="${item.obs || ''}" class="p-obs" placeholder="Repetición / Observación"></td>
+                    <td><button class="btn-danger" onclick="this.parentElement.parentElement.remove()">Eliminar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function agregarFilaEnsayoPlantilla() {
+            if(!cmSeleccionadoActual) { alert("Escoja primero una recepción arriba."); return; }
+            const tbody = document.getElementById('tabla-plantilla-body');
+            const tr = document.createElement('tr');
+            let idx = tbody.rows.length + 1;
+            tr.innerHTML = `
+                <td>${idx}</td>
+                <td><input type="text" value="Ensayo Adicional" class="p-desc"></td>
+                <td><input type="text" value="Método Oficial" class="p-metodo"></td>
+                <td><input type="text" value="" class="p-resultado" placeholder="Digite resultado..."></td>
+                <td><input type="text" value="" class="p-obs" placeholder="Observación"></td>
+                <td><button class="btn-danger" onclick="this.parentElement.parentElement.remove()">Eliminar</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function guardarDatosPlantillaActual() {
+            if(!cmSeleccionadoActual) return;
+            let responsable = document.getElementById('plant_responsable').value;
+            let fecha = document.getElementById('plant_fecha_analisis').value;
+            let ensayos = [];
+            document.querySelectorAll('#tabla-plantilla-body tr').forEach(row => {
+                let desc = row.querySelector('.p-desc').value;
+                let metodo = row.querySelector('.p-metodo').value;
+                let resultado = row.querySelector('.p-resultado').value;
+                let obs = row.querySelector('.p-obs').value;
+                ensayos.push({ desc, metodo, resultado, obs });
+            });
+
+            let claveStorage = `${cmSeleccionadoActual}_${subModuloPlantillaActual}`;
+            plantillasGuardadas[claveStorage] = { responsable, fecha, ensayos };
+            guardarDatosStorage();
+        }
+
+        function descargarPlantillaPDFOficial() {
+            if(!cmSeleccionadoActual) { alert("Escoja un Código CM."); return; }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const cm = document.getElementById('plant_cm').value;
+            const producto = document.getElementById('plant_producto').value;
+            const lote = document.getElementById('plant_lote').value;
+            const fechas = document.getElementById('plant_fechas').value;
+            const responsable = document.getElementById('plant_responsable').value || "No asignado";
+            const fechaAnalisis = document.getElementById('plant_fecha_analisis').value || new Date().toLocaleDateString();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(15);
+            doc.setTextColor(100, 160, 45);
+            doc.text("LABRAS S.R.L.", 14, 16);
+            doc.setFontSize(9);
+            doc.setTextColor(80, 80, 80);
+            doc.text("PLANILLA DE REGISTRO ANALÍTICO (" + subModuloPlantillaActual + ")", 14, 22);
+
+            doc.setFontSize(10);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Código CM: ${cm}`, 196, 16, { align: 'right' });
+            doc.text(`Fecha Análisis: ${fechaAnalisis}`, 196, 22, { align: 'right' });
+
+            doc.setDrawColor(130, 203, 70);
+            doc.setLineWidth(0.8);
+            doc.line(14, 26, 196, 26);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(63, 98, 18);
+            doc.text("DATOS DE LA MUESTRA", 14, 33);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Producto: ${producto}`, 14, 40);
+            doc.text(`Lote: ${lote} | ${fechas}`, 110, 40);
+            doc.text(`Responsable del Análisis: ${responsable}`, 14, 46);
+
+            let y = 56;
+            doc.setFillColor(243, 250, 237);
+            doc.rect(14, y, 182, 8, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.setTextColor(63, 98, 18);
+            doc.text("Nro", 18, y + 6);
+            doc.text("Ensayo / Parámetro Tiqueado", 28, y + 6);
+            doc.text("Método / Especificación", 90, y + 6);
+            doc.text("Resultado Obtenido", 142, y + 6);
+
+            y += 12;
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(40, 40, 40);
+
+            let i = 1;
+            document.querySelectorAll('#tabla-plantilla-body tr').forEach(row => {
+                let desc = row.querySelector('.p-desc').value;
+                let metodo = row.querySelector('.p-metodo').value;
+                let resultado = row.querySelector('.p-resultado').value || "[ Pendiente ]";
+                let obs = row.querySelector('.p-obs').value;
+
+                doc.text(i.toString(), 18, y);
+                doc.text(desc, 28, y, { maxWidth: 58 });
+                doc.text(metodo, 90, y, { maxWidth: 50 });
+                doc.text(resultado + (obs ? ` (${obs})` : ''), 142, y, { maxWidth: 50 });
+                y += 10;
+                i++;
+            });
+
+            y += 20;
+            doc.setDrawColor(150, 150, 150);
+            doc.line(30, y, 90, y);
+            doc.line(120, y, 180, y);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8.5);
+            doc.text("Analista Responsable", 60, y + 5, { align: 'center' });
+            doc.text("Control de Calidad / Revisión", 150, y + 5, { align: 'center' });
+
+            doc.save(`Plantilla_${subModuloPlantillaActual}_${cm}.pdf`);
+            alert("¡Plantilla analítica exportada en PDF con éxito!");
+        }
+
+        function descargarFormularioRecepcionPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const cm = document.getElementById('rec-cm').value || "CM-S/N";
+            const razon = document.getElementById('rec-razon').value || "Sin Cliente";
+            const contacto = document.getElementById('rec-contacto').value || "-";
+            const direccion = document.getElementById('rec-direccion').value || "-";
+            const telefono = document.getElementById('rec-telefono').value || "-";
+            const producto = document.getElementById('rec-producto').value || "No especificado";
+            const cantidad = document.getElementById('rec-cantidad').value || "-";
+            const envase = document.getElementById('rec-envase').value || "-";
+            const lote = document.getElementById('rec-lote').value || "-";
+            const elab = document.getElementById('rec-elab').value || "-";
+            const venc = document.getElementById('rec-venc').value || "-";
+            const fechahora = document.getElementById('rec-fechahora').value || "-";
+            const toma = document.getElementById('rec-toma').value || "-";
+            const entrega = document.getElementById('rec-entrega').value || "-";
+            const temperatura = document.getElementById('rec-temperatura').value || "-";
+            const razonMuestreo = document.getElementById('rec-razon-muestreo').value || "-";
+            const inspector = document.getElementById('rec-inspector').value || "-";
+            const observaciones = document.getElementById('rec-observaciones').value || "Ninguna";
+            const medioEnvio = document.getElementById('rec-medio-envio').value || "-";
+            const responsable = document.getElementById('rec-responsable').value || "José Luis Aguilera Durán";
+
+            let ensayosTiqueados = [];
+            document.querySelectorAll('input[name="ensayo_check"]:checked').forEach(chk => ensayosTiqueados.push(chk.value));
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(100, 160, 45);
+            doc.text("LABRAS S.R.L.", 14, 18);
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Laboratorio Bromatológico • Santa Cruz de la Sierra, Bolivia", 14, 23);
+            doc.setFontSize(12);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`CERTIFICADO DE RECEPCIÓN (${subModuloRecepcionActual})`, 196, 18, { align: 'right' });
+            doc.setFontSize(10);
+            doc.setTextColor(100, 160, 45);
+            doc.text(`Código CM: ${cm}`, 196, 24, { align: 'right' });
+
+            doc.setDrawColor(130, 203, 70);
+            doc.setLineWidth(0.8);
+            doc.line(14, 28, 196, 28);
+
+            doc.setFillColor(243, 250, 237);
+            doc.rect(14, 33, 182, 7, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(63, 98, 18);
+            doc.text("1. DATOS GENERALES DEL CLIENTE", 18, 38);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Razón Social: ${razon}`, 18, 46);
+            doc.text(`Persona de Contacto: ${contacto}`, 110, 46);
+            doc.text(`Dirección: ${direccion}`, 18, 52);
+            doc.text(`Teléfono: ${telefono}`, 110, 52);
+
+            doc.setFillColor(243, 250, 237);
+            doc.rect(14, 58, 182, 7, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(63, 98, 18);
+            doc.text("2. ESPECIFICACIONES DE LA MUESTRA Y MUESTREO", 18, 63);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Producto: ${producto}`, 18, 71);
+            doc.text(`Cantidad: ${cantidad} | Envase: ${envase}`, 110, 71);
+            doc.text(`Lote: ${lote} | F. Elaboración: ${elab} | F. Vencimiento: ${venc}`, 18, 77);
+            doc.text(`Fecha/Hora Recepción: ${fechahora}`, 18, 83);
+            doc.text(`Fecha/Hora Toma Muestra: ${toma}`, 110, 83);
+            doc.text(`Entrega Resultados: ${entrega} | Temp: ${temperatura}`, 18, 89);
+            doc.text(`Razón Muestreo: ${razonMuestreo} | Tipo: AL AZAR`, 110, 89);
+            doc.text(`Inspector / Responsable Toma: ${inspector}`, 18, 95);
+
+            doc.setFillColor(243, 250, 237);
+            doc.rect(14, 101, 182, 7, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(63, 98, 18);
+            doc.text("3. ENSAYOS REQUERIDOS", 18, 106);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.setTextColor(50, 50, 50);
+            let textoEnsayos = ensayosTiqueados.length > 0 ? ensayosTiqueados.join("  •  ") : "Ningún ensayo seleccionado.";
+            doc.text(textoEnsayos, 18, 114, { maxWidth: 175 });
+
+            doc.setFillColor(243, 250, 237);
+            doc.rect(14, 126, 182, 7, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(63, 98, 18);
+            doc.text("4. OBSERVACIONES Y CANAL DE ENVÍO", 18, 131);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(50, 50, 50);
+            doc.text(`Observaciones: ${observaciones}`, 18, 139, { maxWidth: 175 });
+            doc.text(`Medio de Envío del Informe: ${medioEnvio}`, 18, 151);
+            doc.text(`Responsable de Recepción: ${responsable}`, 110, 151);
+
+            doc.setDrawColor(150, 150, 150);
+            doc.line(25, 185, 85, 185);
+            doc.line(125, 185, 185, 185);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8.5);
+            doc.text(responsable, 55, 190, { align: 'center' });
+            doc.text("Firma / Conformidad del Cliente", 155, 190, { align: 'center' });
+
+            doc.save(`Recepcion_${subModuloRecepcionActual}_${cm}.pdf`);
+            alert("¡Formulario exportado en PDF con éxito!");
+        }
+
+        // Inicialización
+        renderizarEnsayosChecklist();
+    </script>
+</body>
+</html>
